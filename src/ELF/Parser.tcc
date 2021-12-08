@@ -522,16 +522,12 @@ uint32_t Parser::get_numberof_dynamic_symbols(DYNSYM_COUNT_METHODS mtd) const {
       {
         uint32_t nb_dynsym, nb_dynsym_tmp = 0;
 
-        nb_dynsym = this->get_numberof_dynamic_symbols<ELF_T>(DYNSYM_COUNT_METHODS::COUNT_RELOCATIONS);
-
-        nb_dynsym_tmp = this->get_numberof_dynamic_symbols<ELF_T>(DYNSYM_COUNT_METHODS::COUNT_SECTION);
-
-        if (nb_dynsym_tmp < Parser::NB_MAX_SYMBOLS and
-            nb_dynsym_tmp > nb_dynsym and
-            (nb_dynsym_tmp - nb_dynsym) < Parser::DELTA_NB_SYMBOLS) {
-          nb_dynsym = nb_dynsym_tmp;
+        nb_dynsym = this->get_numberof_dynamic_symbols<ELF_T>(DYNSYM_COUNT_METHODS::COUNT_SECTION);
+        if (nb_dynsym != 0) {
+          return nb_dynsym;
         }
 
+        nb_dynsym = this->get_numberof_dynamic_symbols<ELF_T>(DYNSYM_COUNT_METHODS::COUNT_RELOCATIONS);
         nb_dynsym_tmp = this->get_numberof_dynamic_symbols<ELF_T>(DYNSYM_COUNT_METHODS::COUNT_HASH);
 
         if (nb_dynsym_tmp < Parser::NB_MAX_SYMBOLS and
