@@ -606,12 +606,21 @@ void Binary::make_space_for_new_section(void) {
   for (Section* section : this->sections_) {
     section->pointerto_raw_data(section->pointerto_raw_data() + shift);
   }
-  this->available_sections_space_++;
+
+  this->optional_header().sizeof_headers(this->optional_header().sizeof_headers() + shift);
+
+  size_t headersUsed = dos_header().addressof_new_exeheader() +
+      sizeof(pe_header) +
+      ((type() == PE_TYPE::PE32) ? sizeof(pe32_optional_header) : sizeof(pe64_optional_header)) +
+      sizeof(pe_data_directory) * DEFAULT_NUMBER_DATA_DIRECTORIES +
+      this->header().numberof_sections() * sizeof(pe_section);
+  auto remainder = this->optional_header().sizeof_headers() - headersUsed;
+  this->available_sections_space_ = remainder / sizeof(pe_section);
 }
 
 Section& Binary::add_section(const Section& section, PE_SECTION_TYPES type) {
 
-  if (this->available_sections_space_ < 0) {
+  if (this->available_sections_space_ <= 0) {
     this->make_space_for_new_section();
     return this->add_section(section, type);
   }
@@ -641,7 +650,7 @@ Section& Binary::add_section(const Section& section, PE_SECTION_TYPES type) {
   // Compute new section offset
   uint64_t new_section_offset = align(std::accumulate(
       std::begin(this->sections_),
-      std::end(this->sections_), this->sizeof_headers(),
+      std::end(this->sections_), this->optional_header().sizeof_headers(),
       [] (uint64_t offset, const Section* s) {
         return std::max<uint64_t>(s->pointerto_raw_data() + s->sizeof_raw_data(), offset);
       }), this->optional_header().file_alignment());
