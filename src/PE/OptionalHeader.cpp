@@ -63,7 +63,7 @@ OptionalHeader::OptionalHeader(void) :
   sizeOfHeapReserve_(0x100000),
   sizeOfHeapCommit_(0x1000),
   loaderFlags_(0),
-  numberOfRvaAndSize_(DEFAULT_NUMBER_DATA_DIRECTORIES + 1)
+  numberOfRvaAndSize_(DEFAULT_NUMBER_DATA_DIRECTORIES)
 {
   this->sizeOfHeaders_ = sizeof(pe_dos_header) + sizeof(pe_header);
   this->sizeOfHeaders_ = LIEF::align(this->sizeOfHeaders_, this->fileAlignment_);
