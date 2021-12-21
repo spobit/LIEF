@@ -124,7 +124,17 @@ void Parser::init(const std::string& name) {
     this->binary_->datahandler_ = new DataHandler::Handler{*stream_};
 
     const Elf32_Ehdr& elf_hdr = this->stream_->peek<Elf32_Ehdr>(0);
+    LIEF_ERR("SWAP END: {}", this->should_swap());
+    LIEF_ERR("{:x}", stream_->peek<uint32_t>(0));
     this->stream_->set_endian_swap(this->should_swap());
+    LIEF_ERR("{:x}", stream_->peek<uint32_t>(0));
+    auto x = stream_->peek<ELF32::Elf_Ehdr>(0);
+    //LIEF::Convert::swap_endian(&x);
+    Header hdr = &x;
+    std::ostringstream oss;
+    oss << hdr;
+    LIEF_ERR("{}", oss.str());
+
     uint32_t type = elf_hdr.e_ident[static_cast<size_t>(IDENTITY::EI_CLASS)];
 
     this->binary_->type_ = static_cast<ELF_CLASS>(type);
@@ -189,7 +199,7 @@ void Parser::parse_symbol_version(uint64_t symbol_version_offset) {
     if (not this->stream_->can_read<uint16_t>()) {
       break;
     }
-    this->binary_->symbol_version_table_.push_back(new SymbolVersion{this->stream_->read_conv<uint16_t>()});
+    this->binary_->symbol_version_table_.push_back(new SymbolVersion{this->stream_->read<uint16_t>()});
   }
 }
 
@@ -221,7 +231,7 @@ uint64_t Parser::get_dynamic_string_table_from_segments() const {
       if (not this->stream_->can_read<Elf32_Dyn>()) {
         return 0;
       }
-      const Elf32_Dyn e = this->stream_->read_conv<Elf32_Dyn>();
+      const Elf32_Dyn e = this->stream_->read<Elf32_Dyn>();
 
       if (static_cast<DYNAMIC_TAGS>(e.d_tag) == DYNAMIC_TAGS::DT_STRTAB) {
         return this->binary_->virtual_address_to_offset(e.d_un.d_val);
@@ -235,7 +245,7 @@ uint64_t Parser::get_dynamic_string_table_from_segments() const {
       if (not this->stream_->can_read<Elf64_Dyn>()) {
         return 0;
       }
-      const Elf64_Dyn e = this->stream_->read_conv<Elf64_Dyn>();
+      const Elf64_Dyn e = this->stream_->read<Elf64_Dyn>();
 
       if (static_cast<DYNAMIC_TAGS>(e.d_tag) == DYNAMIC_TAGS::DT_STRTAB) {
         return this->binary_->virtual_address_to_offset(e.d_un.d_val);
@@ -304,7 +314,7 @@ void Parser::parse_symbol_sysv_hash(uint64_t offset) {
     if (not this->stream_->can_read<uint32_t>()) {
       break;
     }
-    buckets[i] = this->stream_->read_conv<uint32_t>();
+    buckets[i] = this->stream_->read<uint32_t>();
   }
 
   sysvhash.buckets_ = std::move(buckets);
@@ -315,7 +325,7 @@ void Parser::parse_symbol_sysv_hash(uint64_t offset) {
     if (not this->stream_->can_read<uint32_t>()) {
       break;
     }
-    chains[i] = this->stream_->read_conv<uint32_t>();
+    chains[i] = this->stream_->read<uint32_t>();
   }
 
   sysvhash.chains_ = std::move(chains);
@@ -334,21 +344,21 @@ void Parser::parse_notes(uint64_t offset, uint64_t size) {
     if (not this->stream_->can_read<uint32_t>()) {
       break;
     }
-    uint32_t namesz = this->stream_->read_conv<uint32_t>();
+    uint32_t namesz = this->stream_->read<uint32_t>();
     LIEF_DEBUG("Name size: 0x{:x}", namesz);
 
 
     if (not this->stream_->can_read<uint32_t>()) {
       break;
     }
-    uint32_t descsz = std::min(this->stream_->read_conv<uint32_t>(), Parser::MAX_NOTE_DESCRIPTION);
+    uint32_t descsz = std::min(this->stream_->read<uint32_t>(), Parser::MAX_NOTE_DESCRIPTION);
 
     LIEF_DEBUG("Description size: 0x{:x}", descsz);
 
     if (not this->stream_->can_read<uint32_t>()) {
       break;
     }
-    NOTE_TYPES type = static_cast<NOTE_TYPES>(this->stream_->read_conv<uint32_t>());
+    NOTE_TYPES type = static_cast<NOTE_TYPES>(this->stream_->read<uint32_t>());
     LIEF_DEBUG("Type: 0x{:x}", static_cast<size_t>(type));
 
     if (namesz == 0) { // System reserves

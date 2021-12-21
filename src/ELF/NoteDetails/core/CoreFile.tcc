@@ -36,16 +36,16 @@ void CoreFile::parse_() {
   if (not stream.can_read<Elf_Addr>(0)) {
     return;
   }
-  const Elf_Addr count = stream.read_conv<Elf_Addr>();
+  const Elf_Addr count = stream.read<Elf_Addr>();
   if (count == 0 or not stream.can_read<Elf_Addr>()) {
     return;
   }
-  this->page_size_ = static_cast<uint64_t>(stream.read_conv<Elf_Addr>());
+  this->page_size_ = static_cast<uint64_t>(stream.read<Elf_Addr>());
   for (uint32_t idx = 0; idx < count; idx++) {
     if (not stream.can_read<Elf_FileEntry>()) {
       break;
     }
-    const Elf_FileEntry entry = stream.read_conv<Elf_FileEntry>();
+    const Elf_FileEntry entry = stream.read<Elf_FileEntry>();
     this->files_.push_back({entry.start, entry.end, entry.file_ofs, {}});
   }
   for (uint32_t idx = 0; idx < count; idx++) {
